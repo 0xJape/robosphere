@@ -164,6 +164,8 @@ export default function App() {
   }, [readings, summary]);
 
   const hazard = LEVEL_META[latest?.hazard_level || "safe"] || LEVEL_META.safe;
+  const activeAlerts = alerts.filter((alert) => alert.level === "danger").length;
+  const warningAlerts = alerts.filter((alert) => alert.level === "warning").length;
 
   const handleChat = async (payload) => {
     const mode = payload?.mode === "risk" ? "risk" : "guidance";
@@ -183,39 +185,43 @@ export default function App() {
           <div className="brand-mark"></div>
           <div>
             <h1>RoboSphere</h1>
-            <p>Realtime safety and robotics guidance</p>
+            <p>Realtime safety and robotics operations</p>
           </div>
         </div>
 
         <div className="sidebar-card">
-          <div className="sidebar-row">
-            <span className="muted">System status</span>
+          <div className="sidebar-card-title">
+            <span>System state</span>
             <StatusPill connected={status.connected} />
           </div>
           <div className="sidebar-row">
             <span className="muted">Last update</span>
-            <span>{formatTime(latest?.ts)}</span>
+            <strong>{formatTime(latest?.ts)}</strong>
           </div>
           <div className="sidebar-row">
             <span className="muted">Hazard level</span>
-            <span className={`pill ${hazard.className}`}>{hazard.label}</span>
+            <strong className={`pill ${hazard.className}`}>{hazard.label}</strong>
           </div>
         </div>
 
         <div className="sidebar-card">
-          <h3>Totals</h3>
+          <div className="sidebar-card-title">
+            <span>Totals</span>
+          </div>
           <div className="sidebar-row">
             <span className="muted">Readings</span>
-            <span>{summary?.totalReadings ?? 0}</span>
+            <strong>{summary?.totalReadings ?? 0}</strong>
           </div>
           <div className="sidebar-row">
             <span className="muted">Alerts</span>
-            <span>{summary?.totalAlerts ?? 0}</span>
+            <strong>{summary?.totalAlerts ?? 0}</strong>
           </div>
         </div>
 
         <div className="sidebar-card">
-          <h3>Shift notes</h3>
+          <div className="sidebar-card-title">
+            <span>Shift notes</span>
+          </div>
           <p className="muted">
             Keep ventilation on. Review alert history before starting new builds.
             Use the chatbot for fast diagnostics and guidance.
@@ -224,14 +230,30 @@ export default function App() {
       </aside>
 
       <main className="main">
-        <header className="topbar">
-          <div>
-            <h2>Live Environment Overview</h2>
-            <p className="muted">{formatDate(latest?.ts)} {formatTime(latest?.ts)}</p>
+        <header className="hero panel">
+          <div className="hero-copy">
+            <div className="eyebrow">RoboSphere command center</div>
+            <h2>Live environment overview</h2>
+            <p className="muted">
+              Monitor sensor readings, triage hazards, and move directly into either safety analysis or robotics guidance.
+            </p>
+            <div className="hero-tags">
+              <span className="hero-tag active">Live telemetry</span>
+              <span className="hero-tag">{summary?.totalReadings ?? 0} readings stored</span>
+              <span className="hero-tag warning">{warningAlerts} warnings</span>
+              <span className="hero-tag danger">{activeAlerts} critical alerts</span>
+            </div>
           </div>
-          <div className={`hazard-banner ${hazard.className}`}>
-            <span>{hazard.label}</span>
-            <strong>{flagLabel(latest?.hazard_flags?.[0])}</strong>
+
+          <div className="hero-meta">
+            <div className="hero-meta-item">
+              <span className="muted">Snapshot</span>
+              <strong>{formatDate(latest?.ts)} {formatTime(latest?.ts)}</strong>
+            </div>
+            <div className="hero-meta-item">
+              <span className="muted">Current state</span>
+              <strong className={`pill ${hazard.className}`}>{hazard.label}</strong>
+            </div>
           </div>
         </header>
 
@@ -245,8 +267,26 @@ export default function App() {
         </section>
 
         <section className="grid">
-          <ChartPanel readings={readings} />
-          <MapPanel map={summary?.map} />
+          <div className="section-stack">
+            <div className="section-heading">
+              <div>
+                <h3>Live trends</h3>
+                <p className="muted">Sensor movement over the latest readings</p>
+              </div>
+              <span className="section-chip">60 sample window</span>
+            </div>
+            <ChartPanel readings={readings} />
+          </div>
+          <div className="section-stack">
+            <div className="section-heading">
+              <div>
+                <h3>Area map</h3>
+                <p className="muted">Facility view and current placement</p>
+              </div>
+              <span className="section-chip">Satellite layer</span>
+            </div>
+            <MapPanel map={summary?.map} />
+          </div>
         </section>
       </main>
 

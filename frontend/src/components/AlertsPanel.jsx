@@ -19,9 +19,10 @@ export default function AlertsPanel({ alerts }) {
     <div className="panel alerts-panel">
       <div className="panel-header">
         <div>
-          <h3>Alerts</h3>
-          <p className="muted">Latest incidents</p>
+          <h3>Incident stream</h3>
+          <p className="muted">Latest incidents and hazard messages</p>
         </div>
+        <span className="section-chip">{list.length} total</span>
       </div>
       <div className="alerts-list">
         {list.length === 0 ? (
@@ -29,13 +30,16 @@ export default function AlertsPanel({ alerts }) {
         ) : (
           list.slice(0, 8).map((alert) => (
             <div key={alert.id || alert.ts} className={`alert-item ${alert.level}`}>
-              <div>
+              <div className="alert-item-top">
                 <strong>{alert.title}</strong>
+                <span className={`pill ${alert.level}`}>{levelLabel(alert.level)}</span>
+              </div>
+              <div>
                 <p>{alert.message}</p>
               </div>
               <div className="alert-meta">
-                <span>{levelLabel(alert.level)}</span>
                 <span>{formatTime(alert.ts)}</span>
+                <span>{alert.level === "danger" ? "Immediate review" : "Monitor"}</span>
               </div>
             </div>
           ))

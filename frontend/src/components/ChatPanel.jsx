@@ -26,6 +26,11 @@ export default function ChatPanel({
   ]);
   const [input, setInput] = useState("");
 
+  const quickPrompts =
+    mode === "risk"
+      ? ["Summarize the current risk", "What should I check first?", "Is this safe to continue?"]
+      : ["Suggest a beginner project", "List required materials", "Give me a step-by-step plan"];
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const trimmed = input.trim();
@@ -47,7 +52,6 @@ export default function ChatPanel({
   };
 
   return (
-    <div className="panel chat-panel">
     <div className={`panel chat-panel ${variant ? `chat-panel--${variant}` : ""}`.trim()}>
       <div className="panel-header">
         <div>
@@ -57,6 +61,18 @@ export default function ChatPanel({
         <span className={`pill ${mode === "risk" ? "warning" : "safe"}`}>
           {mode === "risk" ? "Analysis" : "Guidance"}
         </span>
+      </div>
+      <div className="quick-prompts">
+        {quickPrompts.map((prompt) => (
+          <button
+            key={prompt}
+            type="button"
+            className="quick-prompt"
+            onClick={() => setInput(prompt)}
+          >
+            {prompt}
+          </button>
+        ))}
       </div>
       <div className="chat-messages">
         {messages.map((message, index) => (

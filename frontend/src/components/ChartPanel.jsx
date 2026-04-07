@@ -4,6 +4,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
   ResponsiveContainer
 } from "recharts";
 
@@ -31,12 +32,18 @@ export default function ChartPanel({ readings }) {
           <h3>Environmental Trends</h3>
           <p className="muted">Last 60 readings</p>
         </div>
+        <div className="legend-row">
+          <span><i className="legend-dot co2" />CO2</span>
+          <span><i className="legend-dot temp" />Temp</span>
+          <span><i className="legend-dot humidity" />Humidity</span>
+        </div>
       </div>
       <div className="chart-wrap">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
-            <XAxis dataKey="time" tick={{ fill: "#5F6B7A", fontSize: 12 }} />
-            <YAxis tick={{ fill: "#5F6B7A", fontSize: 12 }} />
+            <CartesianGrid vertical={false} strokeDasharray="4 4" />
+            <XAxis dataKey="time" tick={{ fill: "#5F6B7A", fontSize: 12 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "#5F6B7A", fontSize: 12 }} axisLine={false} tickLine={false} width={42} />
             <Tooltip
               contentStyle={{
                 background: "#FFFFFF",
