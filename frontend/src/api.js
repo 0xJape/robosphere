@@ -11,6 +11,24 @@ const apiGet = async (path) => {
 export const getSummary = () => apiGet("/api/summary");
 export const getReadings = (limit = 200) => apiGet(`/api/sensors?limit=${limit}`);
 export const getAlerts = (limit = 200) => apiGet(`/api/alerts?limit=${limit}`);
+export const getFiles = () => apiGet(`/api/files`);
+export const deleteFile = (filename) => fetch(`${API_URL}/api/files/${encodeURIComponent(filename)}`, { method: "DELETE" }).then((res) => res.json());
+
+export const uploadFile = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_URL}/api/upload`, {
+    method: "POST",
+    body: formData
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "File upload failed.");
+  }
+  return response.json();
+};
 
 export const postChat = async (payload) => {
   const response = await fetch(`${API_URL}/api/chat`, {

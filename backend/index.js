@@ -1,7 +1,11 @@
+import "dotenv/config";
 import http from "http";
 import express from "express";
 import cors from "cors";
 import { Server } from "socket.io";
+import fs from "fs";
+import path from "path";
+import multer from "multer";
 import { config } from "./config.js";
 import {
   initDb,
@@ -21,6 +25,21 @@ import { generateChatResponse } from "./gemini.js";
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "256kb" }));
+
+const uploadDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+    cb(null, `${Date.now()}-${safeName}`);
+  }
+});
+const upload = multer({ storage });
+
+app.use("/uploads", express.static(uploadDir));
 
 const toNumber = (value) => {
   if (value === null || value === undefined) return null;
@@ -58,6 +77,55 @@ const startServer = async () => {
 
   app.get("/api/health", (req, res) => {
     res.json({ ok: true, time: Date.now() });
+  });
+
+  app.get("/api/files", (req, res) => {
+    try {
+      const files = fs.readdirSync(uploadDir).map((fileName) => {
+        const stats = fs.statSync(path.join(uploadDir, fileName));
+        return {
+          name: fileName,
+          url: `/uploads/${fileName}`,
+          size: stats.size,
+          ts: stats.mtimeMs
+        };
+      });
+      // Sort newest first
+      files.sort((a, b) => b.ts - a.ts);
+      res.json({ ok: true, files });
+    } catch (error) {
+      sendError(res, error);
+    }
+  });
+
+  app.post("/api/upload", upload.single("file"), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ ok: false, error: "No file uploaded." });
+    }
+    res.status(201).json({
+      ok: true,
+      file: {
+        name: req.file.filename,
+        url: `/uploads/${req.file.filename}`,
+        size: req.file.size,
+        ts: Date.now()
+      }
+    });
+  });
+
+  app.delete("/api/files/:filename", (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const filePath = path.join(uploadDir, filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        res.json({ ok: true, message: "File deleted successfully" });
+      } else {
+        res.status(404).json({ ok: false, error: "File not found" });
+      }
+    } catch (error) {
+      sendError(res, error);
+    }
   });
 
   app.get("/api/summary", async (req, res) => {
@@ -146,7 +214,7 @@ const startServer = async () => {
     try {
       const latest = (await getLatestReading(db)) || null;
       const response = await generateChatResponse({
-        apiKey: config.geminiApiKey,
+        apiKeys: config.geminiApiKeys,
         message,
         mode,
         latestReading: latest
