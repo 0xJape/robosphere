@@ -1,6 +1,6 @@
 Design Philosophy
 
-RoboSphere is designed to look like a modern analytics dashboard, similar to what you would see in professional monitoring systems, data platforms, or control centers. The goal is to create an interface that feels intentional, structured, and engineered by a developer, not something that looks template-based or AI-generated.
+HomeGuard is designed to look like a modern analytics dashboard, similar to what you would see in professional monitoring systems, data platforms, or control centers. The goal is to create an interface that feels intentional, structured, and engineered by a developer, not something that looks template-based or AI-generated.
 
 Instead of flashy or overly decorative elements, the design focuses on clarity, hierarchy, and usability, making data easy to read and act on.
 
@@ -15,14 +15,14 @@ Minimal but functional UI (no unnecessary elements)
 Think of:
 
 Analytics platforms (e.g., monitoring dashboards)
-Cybersecurity control panels
-Industrial IoT dashboards
+Home security control panels
+Smart home IoT dashboards
 
 Avoid:
 
 Overuse of glow effects
 Random bright colors
-“Glassmorphism overload”
+"Glassmorphism overload"
 Symmetrical, template-like layouts
 
 👉 The UI should feel slightly asymmetrical and practical, like it was built for real use—not just for presentation.
@@ -101,18 +101,18 @@ Prioritize data stacking, not shrinking
 Sidebar should feel like a tool panel, not a menu
 🧠 UX Principle (Refined)
 
-“Design like it’s going to be used daily, not just presented once.”
+"Design like it's going to be used daily, not just presented once."
 
 🔥 Final Look (Clear Direction)
 
-RoboSphere should look like:
+HomeGuard should look like:
 
 A real analytics dashboard
-A monitoring/control system used by engineers
+A monitoring/control system used by homeowners
 A data-driven interface with purpose
 
 Not:
 
 A startup landing page
 A UI template
-A “cool but impractical” design
+A "cool but impractical" design

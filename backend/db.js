@@ -118,3 +118,12 @@ export const countAlerts = (db) =>
 
 export const getLatestAlert = (db) =>
   db.get("SELECT * FROM alerts ORDER BY ts DESC LIMIT 1");
+
+export const deleteAlert = (db, id) =>
+  db.run("DELETE FROM alerts WHERE id = ?", id);
+
+export const clearAlerts = (db) =>
+  db.run("DELETE FROM alerts");
+
+export const clearAlertsByFlag = (db, flag) =>
+  db.run("DELETE FROM alerts WHERE message LIKE ?", [`%${flag}%`]);

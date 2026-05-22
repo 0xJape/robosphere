@@ -8,7 +8,7 @@ const char* ssid = "GoOneMore";
 const char* password = "P@rtwor10.";
 
 // ===== Backend Server URL =====
-const char* serverName = "http://jaypee.local:3001/api/sensors";
+const char* serverName = "http://192.168.1.61:3001/api/sensors";
 
 
 // ===== MH-Z19B Serial Pins =====

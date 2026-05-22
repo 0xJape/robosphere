@@ -2,10 +2,7 @@ import { useState } from "react";
 
 const formatTime = (ts) => {
   if (!ts) return "--";
-  return new Date(ts).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
+  return new Date(ts).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 };
 
 const levelLabel = (level) => {
@@ -14,7 +11,6 @@ const levelLabel = (level) => {
   return "Info";
 };
 
-// Local icons for alerts
 const IconAlertFlame = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>
 );
@@ -31,46 +27,62 @@ const IconAlertInfo = () => (
 const getAlertIcon = (title, message, level) => {
   const t = (title + " " + message).toLowerCase();
   let Icon = IconAlertInfo;
-  
   if (t.includes("flame") || t.includes("fire")) Icon = IconAlertFlame;
   else if (t.includes("temp") || t.includes("heat")) Icon = IconAlertThermometer;
   else if (t.includes("smoke") || t.includes("gas") || t.includes("co2")) Icon = IconAlertCloud;
   else if (level === "danger") Icon = IconAlertFlame;
-  
   return <Icon />;
 };
 
-export default function AlertsPanel({ alerts, fullHeight }) {
+const clearAllBtnStyle = {
+  background: "none",
+  border: "1px solid var(--danger)",
+  color: "var(--danger)",
+  borderRadius: "6px",
+  padding: "4px 12px",
+  cursor: "pointer",
+  fontSize: "12px",
+  fontWeight: 600
+};
+
+export default function AlertsPanel({ alerts, fullHeight, onDelete, onClearAll }) {
   const [filter, setFilter] = useState("all");
-  
+
   const list = alerts || [];
   const filteredList = list.filter(a => filter === "all" || a.level === filter);
   const limit = fullHeight ? filteredList.length : 8;
 
   const content = (
-    <div className="alerts-list" style={{ maxHeight: fullHeight ? '100%' : '420px', flex: fullHeight ? 1 : 'unset' }}>
+    <div className="alerts-list" style={{ maxHeight: fullHeight ? "100%" : "420px", flex: fullHeight ? 1 : "unset" }}>
       {filteredList.length === 0 ? (
         <div className="empty-state">
-           <div className="empty-state-icon">✓</div>
-           No incidents match this filter.
+          <div className="empty-state-icon">✓</div>
+          No incidents match this filter.
         </div>
       ) : (
         filteredList.slice(0, limit).map((alert) => (
-          <div key={alert.id || alert.ts} className={`alert-item ${alert.level}`} style={{ position: 'relative' }}>
-            <div className="alert-item-top" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div key={alert.id || alert.ts} className={`alert-item ${alert.level}`} style={{ position: "relative" }}>
+            <div className="alert-item-top" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <div style={{
-                color: alert.level === 'danger' ? 'var(--danger)' : (alert.level === 'warning' ? 'var(--warning)' : 'var(--info)'),
-                display: 'flex', 
-                alignItems: 'center'
+                color: alert.level === "danger" ? "var(--danger)" : (alert.level === "warning" ? "var(--warning)" : "var(--info)"),
+                display: "flex",
+                alignItems: "center"
               }}>
                 {getAlertIcon(alert.title, alert.message, alert.level)}
               </div>
               <strong style={{ flex: 1 }}>{alert.title}</strong>
               <span className={`pill ${alert.level}`}>{levelLabel(alert.level)}</span>
+              {onDelete && (
+                <button
+                  onClick={() => onDelete(alert.id)}
+                  title="Delete alert"
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: "2px 4px", lineHeight: 1, fontSize: "14px", borderRadius: "4px", transition: "color 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.color = "var(--danger)"}
+                  onMouseLeave={e => e.currentTarget.style.color = "var(--muted)"}
+                >✕</button>
+              )}
             </div>
-            <div>
-              <p>{alert.message}</p>
-            </div>
+            <div><p>{alert.message}</p></div>
             <div className="alert-meta">
               <span>{formatTime(alert.ts)}</span>
               <span>{alert.level === "danger" ? "Immediate review" : "Monitor"}</span>
@@ -83,11 +95,12 @@ export default function AlertsPanel({ alerts, fullHeight }) {
 
   if (fullHeight) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-          <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
-          <button className={`filter-btn ${filter === 'danger' ? 'active' : ''}`} onClick={() => setFilter('danger')}>Critical</button>
-          <button className={`filter-btn ${filter === 'warning' ? 'active' : ''}`} onClick={() => setFilter('warning')}>Warnings</button>
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "12px", alignItems: "center" }}>
+          <button className={`filter-btn ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>All</button>
+          <button className={`filter-btn ${filter === "danger" ? "active" : ""}`} onClick={() => setFilter("danger")}>Critical</button>
+          <button className={`filter-btn ${filter === "warning" ? "active" : ""}`} onClick={() => setFilter("warning")}>Warnings</button>
+          {onClearAll && <button onClick={onClearAll} style={{ ...clearAllBtnStyle, marginLeft: "auto" }}>Clear All</button>}
         </div>
         {content}
       </div>
@@ -101,9 +114,10 @@ export default function AlertsPanel({ alerts, fullHeight }) {
           <h3>Incident stream</h3>
           <p className="muted">Latest incidents and hazard messages</p>
         </div>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
-          <button className={`filter-btn ${filter === 'danger' ? 'active' : ''}`} onClick={() => setFilter('danger')}>Critical</button>
+        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+          <button className={`filter-btn ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>All</button>
+          <button className={`filter-btn ${filter === "danger" ? "active" : ""}`} onClick={() => setFilter("danger")}>Critical</button>
+          {onClearAll && <button onClick={onClearAll} style={clearAllBtnStyle}>Clear All</button>}
         </div>
       </div>
       {content}

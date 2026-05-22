@@ -18,6 +18,9 @@ import {
   countAlerts,
   getLatestAlert,
   insertChat
+    ,deleteAlert,
+    clearAlerts,
+    clearAlertsByFlag
 } from "./db.js";
 import { evaluateHazards, buildAlert } from "./hazards.js";
 import { generateChatResponse } from "./gemini.js";
@@ -180,8 +183,27 @@ const startServer = async () => {
     }
   });
 
+    app.delete("/api/alerts", async (req, res) => {
+      try {
+        await clearAlerts(db);
+        res.json({ ok: true, message: "All alerts cleared." });
+      } catch (error) {
+        sendError(res, error);
+      }
+    });
+
+    app.delete("/api/alerts/:id", async (req, res) => {
+      try {
+        await deleteAlert(db, req.params.id);
+        res.json({ ok: true, message: "Alert deleted." });
+      } catch (error) {
+        sendError(res, error);
+      }
+    });
+
   app.post("/api/sensors", async (req, res) => {
     try {
+      console.log(`📡 Sensor data received from ${req.ip}:`, JSON.stringify(req.body));
       const reading = normalizeReading(req.body || {});
       const hazard = evaluateHazards(reading, config.alerts);
       const saved = await insertReading(db, {
@@ -194,11 +216,21 @@ const startServer = async () => {
       if (hazard.level !== "safe") {
         alert = await insertAlert(db, buildAlert(reading, hazard));
         io.emit("alert", alert);
+        console.log(`⚠️ Alert triggered: ${hazard.level} - ${hazard.flags.join(', ')}`);
       }
 
+        // Auto-clear flame alerts when flame is no longer detected
+        if (reading.flame === 0) {
+          await clearAlertsByFlag(db, "Flame detected");
+          io.emit("alertCleared", { flag: "flame" });
+          console.log("🔥 Flame cleared - removed flame alerts");
+        }
+
       io.emit("reading", saved);
+      console.log(`✅ Data saved: ID ${saved.id}, CO2: ${saved.co2}ppm, Temp: ${saved.temperature}°C`);
       res.status(201).json({ ok: true, reading: saved, alert });
     } catch (error) {
+      console.error(`❌ Error processing sensor data:`, error);
       sendError(res, error);
     }
   });
@@ -206,18 +238,31 @@ const startServer = async () => {
   app.post("/api/chat", async (req, res) => {
     const message = String(req.body?.message || "").trim();
     const mode = req.body?.mode === "risk" ? "risk" : "guidance";
+    const context = req.body?.context || {};
 
     if (!message) {
       return res.status(400).json({ ok: false, error: "Message is required." });
     }
 
     try {
-      const latest = (await getLatestReading(db)) || null;
+      // Use context from frontend if provided, otherwise fallback to DB
+      const latestReading = context.latestReading || (await getLatestReading(db)) || null;
+      const alerts = context.alerts || [];
+      const summary = context.summary || null;
+      
+      // Debug logging
+      console.log("📊 Chat context received:");
+      console.log("  Latest reading:", latestReading);
+      console.log("  Alerts count:", alerts.length);
+      console.log("  Summary:", summary);
+      
       const response = await generateChatResponse({
-        apiKeys: config.geminiApiKeys,
+        apiKey: config.aiApiKey,
         message,
         mode,
-        latestReading: latest
+        latestReading,
+        alerts,
+        summary
       });
 
       await insertChat(db, {
@@ -233,8 +278,10 @@ const startServer = async () => {
     }
   });
 
-  server.listen(config.port, () => {
-    console.log(`RoboSphere backend running on port ${config.port}`);
+  server.listen(config.port, '0.0.0.0', () => {
+    console.log(`HomeGuard backend running on port ${config.port}`);
+    console.log(`Local access: http://localhost:${config.port}`);
+    console.log(`Network access: http://192.168.1.61:${config.port}`);
   });
 };
 

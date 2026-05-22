@@ -8,21 +8,21 @@ export default function MapPanel({ map, latest }) {
 
   // Determine circle color and radius based on hazard level
   let circleColor = "#1a9c8b"; // safe (greenish)
-  let circleRadius = 200;
+    let circleRadius = 30;
   
   if (latest?.hazard_level === "danger") {
     circleColor = "#ff4d4d"; // danger
-    circleRadius = 500;
+     circleRadius = 80;
   } else if (latest?.hazard_level === "warning") {
     circleColor = "#ffc857"; // warning
-    circleRadius = 350;
+     circleRadius = 50;
   }
 
   return (
     <div className="panel">
       <div className="panel-header">
         <div>
-          <h3>Facility Map</h3>
+          <h3>Home Layout</h3>
           <p className="muted">Satellite view</p>
         </div>
       </div>
